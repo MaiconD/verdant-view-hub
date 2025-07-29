@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroCompras - Dashboard de Análise</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .font-inter { font-family: 'Inter', sans-serif; }
+        .font-poppins { font-family: 'Poppins', sans-serif; }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #bbf7d0 100%);
+        }
+        
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .status-melhor {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+        
+        .status-medio {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+        
+        .status-caro {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        .modal-backdrop {
+            backdrop-filter: blur(8px);
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .table-row-hover:hover {
+            background-color: #f8fafc;
+        }
+        
+        /* Responsividade das tabelas */
+        /* Ajustes para tabelas mais compactas */
+        .table-responsive table {
+            font-size: 13px;
+        }
+        
+        .table-responsive th,
+        .table-responsive td {
+            padding: 8px 6px;
+            font-size: 12px;
+            vertical-align: middle;
+        }
+        
+        .table-responsive th {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .table-responsive .text-xs {
+            font-size: 10px;
+        }
+        
+        .compact-column {
+            width: 8%;
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .medium-column {
+            width: 12%;
+            min-width: 120px;
+        }
+        
+        .large-column {
+            width: 15%;
+            min-width: 150px;
+        }
+        
+        .status-column {
+            width: 8%;
+            min-width: 80px;
+        }
+        
+        .action-column {
+            width: 10%;
+            min-width: 100px;
+        }
+
+        @media (max-width: 1024px) {
+            .table-responsive {
+                display: block;
+                width: 100%;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+            
+            .table-responsive table {
+                min-width: 900px;
+            }
+            
+            .table-responsive th,
+            .table-responsive td {
+                padding: 6px 4px;
+                font-size: 11px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .table-responsive table {
+                min-width: 900px;
+            }
+            
+            .table-responsive th,
+            .table-responsive td {
+                padding: 6px 8px;
+                font-size: 12px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                gap: 4px;
+            }
+            
+            .action-buttons button {
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .grid-responsive {
+                grid-template-columns: 1fr;
+            }
+            
+            .flex-responsive {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .space-responsive > * + * {
+                margin-top: 1rem;
+                margin-left: 0;
+            }
+        }
+        
+        .action-button {
+            transition: all 0.2s ease;
+        }
+        
+        .action-button:hover {
+            transform: scale(1.1);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .scenario-tag {
+            animation: scenario-pulse 3s infinite;
+        }
+
+        @keyframes scenario-pulse {
+            0%, 100% { background-color: #fee2e2; }
+            50% { background-color: #fecaca; }
+        }
+
+        .best-option {
+            border: 2px solid #10b981;
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        }
+
+        .expandable-section {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .expandable-section.expanded {
+            max-height: 2000px;
+        }
+        
+        .alvo-collapsed .expandable-section {
+            max-height: 0;
+            overflow: hidden;
+        }
+        
+        .alvo-expanded .expandable-section {
+            max-height: 2000px;
+            overflow: visible;
+        }
+        
+        .rotate-180 {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body class="font-inter bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <img src="xU_PVpg3NNFQz-NQXVIUR" alt="AgroCompras Logo" class="w-10 h-10">
+                    <div>
+                        <h1 class="font-poppins font-bold text-2xl text-gray-800">AgroCompras</h1>
+                        <p class="text-sm text-gray-600">Gestão Inteligente de Compras</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="text-right">
+                        <p class="text-sm font-medium text-gray-800">Fazenda São Paulo</p>
+                        <p class="text-xs text-gray-600">João Silva - Administrador</p>
+                    </div>
+                    <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">JS</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Breadcrumb -->
+    <div class="max-w-7xl mx-auto px-6 py-4">
+        <div class="flex items-center justify-between">
+            <nav class="flex items-center space-x-2 text-sm">
+                <a href="#" class="text-blue-600 hover:text-blue-800">Histórico de Cenários</a>
+                <i class="fas fa-chevron-right text-gray-400"></i>
+                <span class="text-gray-600">Análise de Cenário</span>
+            </nav>
+            
+            <!-- Botão Relatório movido para cá -->
+            <button class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center">
+                <i class="fas fa-download mr-2"></i>Relatório
+            </button>
+        </div>
+    </div>
+
+        <!-- Cabeçalho do Cenário -->
+        <div class="max-w-7xl mx-auto px-6 pb-8">
+            <div class="flex flex-col items-start space-y-4">
+                <div class="w-full">
+                    <h2 class="font-poppins font-bold text-3xl text-gray-800 mb-3">
+                        Cenário Atual: Soja à Vista 2025 - Buva Resistente
+                    </h2>
+                    
+                    <!-- Informações do Cenário -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Demanda -->
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+                            <div class="flex items-center justify-center mb-1">
+                                <div class="bg-blue-600 w-6 h-6 rounded-full flex items-center justify-center mr-2">
+                                    <i class="fas fa-chart-line text-white text-xs"></i>
+                                </div>
+                                <div class="text-xs font-medium text-gray-700">Demanda</div>
+                            </div>
+                            <div class="font-bold text-blue-700 text-sm">Soja à Vista 2025</div>
+                        </div>
+
+                        <!-- Cultura -->
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+                            <div class="flex items-center justify-center mb-1">
+                                <div class="bg-green-600 w-6 h-6 rounded-full flex items-center justify-center mr-2">
+                                    <i class="fas fa-seedling text-white text-xs"></i>
+                                </div>
+                                <div class="text-xs font-medium text-gray-700">Cultura</div>
+                            </div>
+                            <div class="font-bold text-green-700 text-sm">Soja V4-V6</div>
+                        </div>
+
+                        <!-- Área -->
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
+                            <div class="flex items-center justify-center mb-1">
+                                <div class="bg-yellow-600 w-6 h-6 rounded-full flex items-center justify-center mr-2">
+                                    <i class="fas fa-expand-arrows-alt text-white text-xs"></i>
+                                </div>
+                                <div class="text-xs font-medium text-gray-700">Área Total</div>
+                            </div>
+                            <div class="font-bold text-yellow-700 text-sm">1.500 ha</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-6 pb-8">
+        <!-- Métricas Principais -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 grid-responsive">
+            <!-- Economia Total -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Economia Total</p>
+                        <p class="text-3xl font-bold text-green-600 mt-1">R$ 2.1M</p>
+                        <p class="text-sm text-green-600 mt-1">
+                            <i class="fas fa-arrow-up mr-1"></i>vs mês anterior
+                        </p>
+                    </div>
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <i class="fas fa-piggy-bank text-2xl text-green-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alvos do Cenário -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Alvos do Cenário</p>
+                        <p class="text-3xl font-bold text-blue-600 mt-1">2</p>
+                        <p class="text-sm text-gray-500 mt-1">problemas identificados</p>
+                    </div>
+                    <div class="bg-blue-100 p-3 rounded-full">
+                        <i class="fas fa-bullseye text-2xl text-blue-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- % Economia Atual -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">% Economia Atual</p>
+                        <p class="text-3xl font-bold text-yellow-600 mt-1">26,5%</p>
+                        <p class="text-sm text-gray-500 mt-1">vs melhor oferta</p>
+                    </div>
+                    <div class="bg-yellow-100 p-3 rounded-full">
+                        <i class="fas fa-percentage text-2xl text-yellow-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Economia Anual -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <div class="flex items-center justify-between">
+                    <div class="w-full">
+                        <p class="text-sm font-medium text-gray-600 mb-2">Economia Anual</p>
+                        <div class="grid grid-cols-1 gap-1">
+                            <div class="flex items-baseline justify-between">
+                                <span class="text-2xl font-bold text-green-600" id="economiaAnualBRL">R$ 340.200</span>
+                                <span class="text-xs text-gray-500">BRL</span>
+                            </div>
+                            <div class="flex items-baseline justify-between">
+                                <span class="text-2xl font-bold text-blue-600" id="economiaAnualUSD">US$ 58.800</span>
+                                <span class="text-xs text-gray-500">USD</span>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-2">6 aplicações/ano</p>
+                    </div>
+                    <div class="bg-purple-100 p-3 rounded-full ml-4 flex-shrink-0">
+                        <i class="fas fa-calendar-alt text-2xl text-purple-600"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Seção de Alvos -->
+        <div class="bg-white rounded-2xl card-shadow p-8 mb-8">
+            <!-- Título da Seção -->
+            <div class="flex items-center mb-8">
+                <div class="bg-blue-600 p-3 rounded-full mr-4">
+                    <i class="fas fa-bullseye text-2xl text-white"></i>
+                </div>
+                <div>
+                    <h2 class="font-poppins font-bold text-3xl text-gray-800">Alvos</h2>
+                    <p class="text-gray-600">Problemas identificados e análise de fornecedores</p>
+                </div>
+            </div>
+
+            <!-- Lista de Alvos -->
+            <div class="space-y-6 mb-8">
+                <!-- Alvo 1 -->
+                <div class="bg-gradient-to-r from-red-50 to-red-100 rounded-xl p-6 border-l-4 border-red-500">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="bg-red-600 w-12 h-12 rounded-full flex items-center justify-center">
+                                <i class="fas fa-bug text-2xl text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-poppins font-bold text-xl text-gray-800">ALVO 1: Buva + Caruru</h3>
+                                <p class="text-red-700 text-sm font-medium">✓ Plantas daninhas resistentes - 3 fornecedores</p>
+                                <p class="text-gray-600 text-sm">Nível de infestação: Alta (60-80%)</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <button onclick="toggleAlvo('alvo1')" class="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700 transition">
+                                <i id="icon-alvo1" class="fas fa-chevron-down mr-2 transition-transform"></i>
+                                <span id="text-alvo1">Expandir</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            <!-- Tabela ALVO 1 (inicialmente oculta) -->
+            <div id="alvo1" class="bg-white rounded-xl card-shadow mb-8 alvo-collapsed">
+
+
+
+            <!-- Tabela de Produtos ALVO 1 -->
+            <div class="expandable-section table-responsive">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="compact-column text-left">Fornecedor</th>
+                            <th class="large-column text-left">Produto</th>
+                            <th class="compact-column text-center">Dosagem</th>
+                            <th class="compact-column text-center">Aplicações</th>
+                            <th class="compact-column text-center">Preço/L<br><span class="text-xs font-normal text-gray-500">(BRL/USD)</span></th>
+                            <th class="compact-column text-center">Custo/HA</th>
+                            <th class="medium-column text-center">Total</th>
+                            <th class="medium-column text-center">Economia</th>
+                            <th class="action-column text-center">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <!-- Fornecedor G (Mais Caro) -->
+                        <tr class="table-row-hover">
+                            <td class="text-center">
+                                <div class="font-medium text-gray-900">Fornecedor G</div>
+                            </td>
+                            <td>
+                                <div class="font-medium text-gray-900">Roundup Ultra Max</div>
+                                <div class="text-xs text-gray-500">Glifosato 480g/L + Dicamba</div>
+                            </td>
+                            <td class="text-center">
+                                <input type="number" value="2.8" step="0.1" min="0" class="w-16 px-2 py-1 text-center text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 font-medium" onchange="updateCosts(this)">
+                                <div class="text-xs text-gray-500 mt-1">2,5-3,5 L/ha</div>
+                            </td>
+                            <td class="text-center">
+                                <input type="number" value="1" min="1" max="5" class="w-12 px-2 py-1 text-center text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 font-medium" onchange="updateCosts(this)">
+                                <div class="text-xs text-gray-500 mt-1">1-2x safra</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-medium text-gray-900">R$ 102,00</div>
+                                <div class="text-xs text-gray-500">BRL</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-bold text-red-600">R$ 285,60</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-medium">R$ 428.400</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-bold text-red-600">-R$ 113.400</div>
+                            </td>
+                            <td class="text-center">
+                                <button onclick="toggleStatus(this)" class="status-btn bg-yellow-500 text-white px-3 py-1 rounded text-xs hover:bg-yellow-600 transition font-medium" data-status="aguardando">
+                                    <i class="fas fa-clock mr-1"></i>Aguardando
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- Fornecedor H (Médio) -->
+                        <tr class="table-row-hover">
+                            <td class="text-center">
+                                <div class="font-medium text-gray-900">Fornecedor H</div>
+                            </td>
+                            <td>
+                                <div class="font-medium text-gray-900">Zapp QI 620</div>
+                                <div class="text-xs text-gray-500">Glifosato 480g/L + 2,4-D</div>
+                            </td>
+                            <td class="text-center">
+                                <input type="number" value="2.8" step="0.1" min="0" class="w-16 px-2 py-1 text-center text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 font-medium" onchange="updateCosts(this)">
+                                <div class="text-xs text-gray-500 mt-1">2,5-3,5 L/ha</div>
+                            </td>
+                            <td class="text-center">
+                                <input type="number" value="1" min="1" max="5" class="w-12 px-2 py-1 text-center text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 font-medium" onchange="updateCosts(this)">
+                                <div class="text-xs text-gray-500 mt-1">1-2x safra</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-medium text-gray-900">R$ 88,00</div>
+                                <div class="text-xs text-gray-500">BRL</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-bold text-yellow-600">R$ 246,40</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-medium">R$ 369.600</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-bold text-yellow-600">-R$ 54.600</div>
+                            </td>
+                            <td class="text-center">
+                                <button onclick="toggleStatus(this)" class="status-btn bg-yellow-500 text-white px-3 py-1 rounded text-xs hover:bg-yellow-600 transition font-medium" data-status="aguardando">
+                                    <i class="fas fa-clock mr-1"></i>Aguardando
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- Fornecedor I (Melhor - Selecionado) -->
+                        <tr class="table-row-hover best-option">
+                            <td class="text-center">
+                                <div class="font-medium text-gray-900">Fornecedor I</div>
+                            </td>
+                            <td>
+                                <div class="font-medium text-gray-900">Roundup Original DI</div>
+                                <div class="text-xs text-gray-500">Glifosato 480g/L + Dicamba</div>
+                            </td>
+                            <td class="text-center">
+                                <input type="number" value="2.8" step="0.1" min="0" class="w-16 px-2 py-1 text-center text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 font-medium" onchange="updateCosts(this)">
+                                <div class="text-xs text-gray-500 mt-1">2,5-3,5 L/ha</div>
+                            </td>
+                            <td class="text-center">
+                                <input type="number" value="1" min="1" max="5" class="w-12 px-2 py-1 text-center text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 font-medium" onchange="updateCosts(this)">
+                                <div class="text-xs text-gray-500 mt-1">1-2x safra</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-medium text-gray-900">R$ 75,00</div>
+                                <div class="text-xs text-gray-500">BRL</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-bold text-green-600">R$ 210,00</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-medium">R$ 315.000</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-bold text-green-600">+R$ 113.400</div>
+                            </td>
+                            <td class="text-center">
+                                <button onclick="toggleStatus(this)" class="status-btn bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700 transition font-medium" data-status="aprovado">
+                                    <i class="fas fa-check mr-1"></i>Aprovado
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+
+        </div>
+
+                <!-- Alvo 2 -->
+                <div class="bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl p-6 border-l-4 border-orange-500">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="bg-orange-600 w-12 h-12 rounded-full flex items-center justify-center">
+                                <i class="fas fa-spider text-2xl text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-poppins font-bold text-xl text-gray-800">ALVO 2: Percevejo-marrom</h3>
+                                <p class="text-orange-700 text-sm font-medium">✓ Inseto sugador - 4 fornecedores</p>
+                                <p class="text-gray-600 text-sm">Nível de infestação: Média (30-45%)</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <button onclick="toggleAlvo('alvo2')" class="bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-orange-700 transition">
+                                <i id="icon-alvo2" class="fas fa-chevron-down mr-2 transition-transform"></i>
+                                <span id="text-alvo2">Expandir</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        <!-- Tabela ALVO 2 (inicialmente oculta) -->
+        <div id="alvo2" class="bg-white rounded-xl card-shadow mb-8 alvo-collapsed">
+
+
+
+            <!-- Tabela de Produtos ALVO 2 -->
+            <div class="expandable-section table-responsive">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="compact-column text-left">Fornecedor</th>
+                            <th class="large-column text-left">Produto</th>
+                            <th class="compact-column text-center">Dosagem</th>
+                            <th class="compact-column text-center">Aplicações</th>
+                            <th class="compact-column text-center">Preço/L<br><span class="text-xs font-normal text-gray-500">(BRL/USD)</span></th>
+                            <th class="compact-column text-center">Custo/HA</th>
+                            <th class="medium-column text-center">Total</th>
+                            <th class="medium-column text-center">Economia</th>
+                            <th class="action-column text-center">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <!-- Fornecedor A (Mais Caro) -->
+                        <tr class="table-row-hover">
+                            <td class="text-center">
+                                <div class="font-medium text-gray-900">Fornecedor A</div>
+                            </td>
+                            <td>
+                                <div class="font-medium text-gray-900">Connect</div>
+                                <div class="text-xs text-gray-500">Imidacloprido + Beta-ciflutrina</div>
+                            </td>
+                            <td class="text-center">
+                                <input type="number" value="1.0" step="0.1" min="0" class="w-16 px-2 py-1 text-center text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 font-medium" onchange="updateCosts(this)">
+                                <div class="text-xs text-gray-500 mt-1">0,75-1,25 L/ha</div>
+                            </td>
+                            <td class="text-center">
+                                <input type="number" value="2" min="1" max="5" class="w-12 px-2 py-1 text-center text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 font-medium" onchange="updateCosts(this)">
+                                <div class="text-xs text-gray-500 mt-1">2-3x safra</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-medium text-gray-900">R$ 145,00</div>
+                                <div class="text-xs text-gray-500">BRL</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-bold text-red-600">R$ 290,00</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-medium">R$ 435.000</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-bold text-red-600">-R$ 90.000</div>
+                            </td>
+                            <td class="text-center">
+                                <button onclick="toggleStatus(this)" class="status-btn bg-yellow-500 text-white px-3 py-1 rounded text-xs hover:bg-yellow-600 transition font-medium" data-status="aguardando">
+                                    <i class="fas fa-clock mr-1"></i>Aguardando
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- Fornecedor B (Médio) -->
+                        <tr class="table-row-hover">
+                            <td class="text-center">
+                                <div class="font-medium text-gray-900">Fornecedor B</div>
+                            </td>
+                            <td>
+                                <div class="font-medium text-gray-900">Engeo Pleno S</div>
+                                <div class="text-xs text-gray-500">Tiametoxam + Lambda-cialotrina</div>
+                            </td>
+                            <td class="text-center">
+                                <input type="number" value="0.75" step="0.1" min="0" class="w-16 px-2 py-1 text-center text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 font-medium" onchange="updateCosts(this)">
+                                <div class="text-xs text-gray-500 mt-1">0,5-1,0 L/ha</div>
+                            </td>
+                            <td class="text-center">
+                                <input type="number" value="2" min="1" max="5" class="w-12 px-2 py-1 text-center text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 font-medium" onchange="updateCosts(this)">
+                                <div class="text-xs text-gray-500 mt-1">2-3x safra</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-medium text-gray-900">US$ 24,50</div>
+                                <div class="text-xs text-gray-500">USD</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-bold text-yellow-600">R$ 192,00</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-medium">R$ 288.000</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-bold text-yellow-600">+R$ 57.000</div>
+                            </td>
+                            <td class="text-center">
+                                <button onclick="toggleStatus(this)" class="status-btn bg-yellow-500 text-white px-3 py-1 rounded text-xs hover:bg-yellow-600 transition font-medium" data-status="aguardando">
+                                    <i class="fas fa-clock mr-1"></i>Aguardando
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- Fornecedor C (Bom) -->
+                        <tr class="table-row-hover">
+                            <td class="text-center">
+                                <div class="font-medium text-gray-900">Fornecedor C</div>
+                            </td>
+                            <td>
+                                <div class="font-medium text-gray-900">Porthus</div>
+                                <div class="text-xs text-gray-500">Tiametoxam + Lambda-cialotrina</div>
+                            </td>
+                            <td class="text-center">
+                                <input type="number" value="0.6" step="0.1" min="0" class="w-16 px-2 py-1 text-center text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 font-medium" onchange="updateCosts(this)">
+                                <div class="text-xs text-gray-500 mt-1">0,5-0,8 L/ha</div>
+                            </td>
+                            <td class="text-center">
+                                <input type="number" value="2" min="1" max="5" class="w-12 px-2 py-1 text-center text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 font-medium" onchange="updateCosts(this)">
+                                <div class="text-xs text-gray-500 mt-1">2-3x safra</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-medium text-gray-900">US$ 22,00</div>
+                                <div class="text-xs text-gray-500">USD</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-bold text-blue-600">R$ 138,00</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-medium">R$ 207.000</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-bold text-green-600">+R$ 138.000</div>
+                            </td>
+                            <td class="text-center">
+                                <button onclick="toggleStatus(this)" class="status-btn bg-yellow-500 text-white px-3 py-1 rounded text-xs hover:bg-yellow-600 transition font-medium" data-status="aguardando">
+                                    <i class="fas fa-clock mr-1"></i>Aguardando
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- Fornecedor D (Melhor - Selecionado) -->
+                        <tr class="table-row-hover best-option">
+                            <td class="text-center">
+                                <div class="font-medium text-gray-900">Fornecedor D</div>
+                            </td>
+                            <td>
+                                <div class="font-medium text-gray-900">Actara 250 WG</div>
+                                <div class="text-xs text-gray-500">Tiametoxam 250g/kg</div>
+                            </td>
+                            <td class="text-center">
+                                <input type="number" value="200" step="10" min="0" class="w-16 px-2 py-1 text-center text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 font-medium" onchange="updateCosts(this)">
+                                <div class="text-xs text-gray-500 mt-1">150-300g/ha</div>
+                            </td>
+                            <td class="text-center">
+                                <input type="number" value="2" min="1" max="5" class="w-12 px-2 py-1 text-center text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 font-medium" onchange="updateCosts(this)">
+                                <div class="text-xs text-gray-500 mt-1">2-3x safra</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-medium text-gray-900">R$ 380,00</div>
+                                <div class="text-xs text-gray-500">BRL</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-bold text-green-600">R$ 152,00</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-medium">R$ 228.000</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="font-bold text-green-600">+R$ 207.000</div>
+                            </td>
+                            <td class="text-center">
+                                <button onclick="toggleStatus(this)" class="status-btn bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700 transition font-medium" data-status="aprovado">
+                                    <i class="fas fa-check mr-1"></i>Aprovado
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+            <!-- Botão Adicionar Novo Alvo -->
+            <div class="mt-6 text-left">
+                <button onclick="adicionarNovoAlvo()" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold text-base hover:bg-blue-700 transition flex items-center space-x-2 card-shadow">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Adicionar Novo Alvo</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Total por Revendedores -->
+        <div class="bg-white rounded-2xl card-shadow p-8 mb-8">
+            <!-- Título da Seção -->
+            <div class="flex items-center mb-8">
+                <div class="bg-green-600 p-3 rounded-full mr-4">
+                    <i class="fas fa-store text-2xl text-white"></i>
+                </div>
+                <div>
+                    <h2 class="font-poppins font-bold text-3xl text-gray-800">Total por Revendedores</h2>
+                    <p class="text-gray-600">Resumo dos produtos aprovados organizados por fornecedor</p>
+                </div>
+            </div>
+
+            <!-- Lista de Fornecedores Aprovados -->
+            <div class="space-y-6 mb-8">
+                <!-- Fornecedor I -->
+                <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6 border-l-4 border-green-500">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="bg-green-600 w-12 h-12 rounded-full flex items-center justify-center">
+                                <span class="text-white font-bold text-lg">I</span>
+                            </div>
+                            <div>
+                                <h3 class="font-poppins font-bold text-xl text-gray-800">Fornecedor I</h3>
+                                <p class="text-green-700 text-sm font-medium">✓ Aprovado - 1 produto selecionado</p>
+                                <p class="text-gray-600 text-sm">Alvo: Buva + Caruru (ALVO 1)</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="bg-green-600 text-white px-4 py-2 rounded-lg text-center">
+                                <div class="text-2xl font-bold">R$ 315.000</div>
+                                <div class="text-sm opacity-90">Total do Fornecedor</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fornecedor D -->
+                <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6 border-l-4 border-green-500">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="bg-green-600 w-12 h-12 rounded-full flex items-center justify-center">
+                                <span class="text-white font-bold text-lg">D</span>
+                            </div>
+                            <div>
+                                <h3 class="font-poppins font-bold text-xl text-gray-800">Fornecedor D</h3>
+                                <p class="text-green-700 text-sm font-medium">✓ Aprovado - 1 produto selecionado</p>
+                                <p class="text-gray-600 text-sm">Alvo: Percevejo-marrom (ALVO 2)</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="bg-green-600 text-white px-4 py-2 rounded-lg text-center">
+                                <div class="text-2xl font-bold">R$ 228.000</div>
+                                <div class="text-sm opacity-90">Total do Fornecedor</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+
+        <!-- Ações Finais do Cenário -->
+        <div class="mt-16 bg-white rounded-xl card-shadow p-8">
+            <div class="text-center mb-8">
+                <h3 class="font-poppins font-bold text-2xl text-gray-800 mb-4">
+                    Finalizar Análise do Cenário
+                </h3>
+                <p class="text-gray-600">
+                    Revise todas as informações antes de salvar ou finalizar o cenário
+                </p>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button onclick="salvarRascunho()" class="bg-gray-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-600 transition">
+                    <i class="fas fa-save mr-2"></i>Salvar Cenário
+                </button>
+                <button onclick="finalizarCenario()" class="bg-green-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-green-700 transition pulse-animation">
+                    <i class="fas fa-check-circle mr-2"></i>Finalizar Cenário
+                </button>
+            </div>
+        </div>
+
+        </div>
+    </div>
+
+    <!-- Modal Criar Novo Cenário -->
+    <div id="createScenarioModal" class="fixed inset-0 z-50 hidden modal-backdrop">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6">
+                <!-- Header do Modal -->
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-bullseye text-green-600"></i>
+                        <h3 class="text-xl font-bold text-gray-800">Simular Novo Cenário</h3>
+                    </div>
+                    <button onclick="closeCreateScenarioModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Navegação por Abas -->
+                <div class="flex mb-6">
+                    <button id="tab-info" onclick="showStep('info')" class="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-l-lg flex items-center justify-center space-x-2">
+                        <i class="fas fa-user"></i>
+                        <span>Informações do Cenário</span>
+                    </button>
+                    <button id="tab-problem" onclick="showStep('problem')" class="flex-1 px-4 py-2 text-sm font-medium text-gray-500 bg-gray-100 rounded-r-lg flex items-center justify-center space-x-2">
+                        <i class="fas fa-bug"></i>
+                        <span>Alvo e Problema</span>
+                    </button>
+                </div>
+
+                <!-- Etapa 1: Informações do Cenário -->
+                <div id="step-info" class="step-content">
+                    <div class="mb-6">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <i class="fas fa-user text-blue-600"></i>
+                            <h4 class="text-lg font-semibold text-blue-600">Etapa 1: Informações do Cenário</h4>
+                        </div>
+                        <p class="text-gray-600 text-sm">Defina o agricultor, fazenda e área que será analisada</p>
+                    </div>
+
+                    <form id="createScenarioForm" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-user-tie text-gray-500"></i>
+                                    <span>Agricultor *</span>
+                                </label>
+                                <select id="agricultor" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                                    <option value="">Selecione um agricultor...</option>
+                                    <option value="fazenda-sao-joao">Fazenda São João</option>
+                                    <option value="agropecuaria-silva">Agropecuária Silva</option>
+                                    <option value="fazenda-esperanca">Fazenda Esperança</option>
+                                    <option value="cooperativa-central">Cooperativa Central</option>
+                                    <option value="fazenda-boa-vista">Fazenda Boa Vista</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-chart-line text-gray-500"></i>
+                                    <span>Demanda</span>
+                                </label>
+                                <select id="demanda" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                                    <option value="">Selecione a demanda...</option>
+                                    <option value="soja-vista-2025">Soja à Vista 2025</option>
+                                    <option value="milho-prazo-2026">Milho à Prazo 2026</option>
+                                    <option value="algodao-vista-2025">Algodão à Vista 2025</option>
+                                    <option value="trigo-vista-2025">Trigo à Vista 2025</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-map-marker-alt text-gray-500"></i>
+                                    <span>Fazenda/Talhão</span>
+                                </label>
+                                <select id="fazenda" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                                    <option value="">Selecione a propriedade...</option>
+                                    <option value="talhao-1">Talhão 1 - Norte</option>
+                                    <option value="talhao-2">Talhão 2 - Sul</option>
+                                    <option value="talhao-3">Talhão 3 - Leste</option>
+                                    <option value="talhao-4">Talhão 4 - Oeste</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-ruler text-gray-500"></i>
+                                    <span>Área (hectares)</span>
+                                </label>
+                                <div class="relative">
+                                    <input type="number" id="area" min="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" placeholder="Área será preenchida automaticamente" readonly>
+                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                        <span class="text-gray-400 text-xs">ha</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-calendar text-gray-500"></i>
+                                <span>Data Prevista de Aplicação</span>
+                            </label>
+                            <input type="date" id="dataAplicacao" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                        </div>
+
+                        <div>
+                            <label class="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-sticky-note text-gray-500"></i>
+                                <span>Observações</span>
+                            </label>
+                            <textarea id="observacoes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" placeholder="Observações sobre o cenário..."></textarea>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Etapa 2: Alvo e Problema -->
+                <div id="step-problem" class="step-content hidden">
+                    <div class="mb-6">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <i class="fas fa-bug text-green-600"></i>
+                            <h4 class="text-lg font-semibold text-green-600">Etapa 2: Problema Alvo</h4>
+                        </div>
+                        <p class="text-gray-600 text-sm">Selecione o problema para a cultura <span id="selectedCulture" class="font-medium text-green-600"></span> selecionada na demanda anterior.</p>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div>
+                            <label class="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-3">
+                                <i class="fas fa-exclamation-triangle text-orange-500"></i>
+                                <span>Problema Alvo</span>
+                            </label>
+                            <select id="problemaAlvo" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                                <option value="">Selecione o problema...</option>
+                                <option value="lagarta-soja">Lagarta-da-soja - (Anticarsia gemmatalis)</option>
+                                <option value="percevejo-marrom">Percevejo-marrom - (Euschistus heros)</option>
+                                <option value="buva-caruru">Buva + Caruru - (Conyza spp. + Amaranthus spp.)</option>
+                                <option value="lagarta-cartucho">Lagarta-do-cartucho - (Spodoptera frugiperda)</option>
+                                <option value="ferrugem-asiatica">Ferrugem-asiática - (Phakopsora pachyrhizi)</option>
+                                <option value="acaro-pulgao">Ácaro + Pulgão - (Tetranychus urticae + Aphis gossypii)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-3">
+                                <i class="fas fa-thermometer-half text-red-500"></i>
+                                <span>Nível de Infestação</span>
+                            </label>
+                            <div class="flex flex-wrap gap-6">
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="radio" name="nivelInfestacao" value="baixa" class="w-4 h-4 text-green-600 focus:ring-green-500">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+                                        <span class="text-sm font-medium text-green-700">Baixa (0-20%)</span>
+                                    </div>
+                                </label>
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="radio" name="nivelInfestacao" value="media" class="w-4 h-4 text-orange-600 focus:ring-orange-500" checked>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="w-3 h-3 bg-orange-500 rounded-full"></span>
+                                        <span class="text-sm font-medium text-orange-700">Média (20-50%)</span>
+                                    </div>
+                                </label>
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="radio" name="nivelInfestacao" value="alta" class="w-4 h-4 text-red-600 focus:ring-red-500">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="w-3 h-3 bg-red-500 rounded-full"></span>
+                                        <span class="text-sm font-medium text-red-700">Alta (50%+)</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-3">
+                                <i class="fas fa-exclamation-triangle text-orange-500"></i>
+                                <span>Descrição do Problema</span>
+                            </label>
+                            <textarea id="descricaoProblema" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" placeholder="Descreva detalhadamente o problema observado..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botões de Navegação -->
+                <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+                    <button id="btnAnterior" onclick="previousStep()" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition hidden">
+                        ← Anterior
+                    </button>
+                    
+                    <div class="flex items-center space-x-3">
+                        <button type="button" onclick="closeCreateScenarioModal()" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
+                            Cancelar
+                        </button>
+                        
+                        <button id="btnProximo" onclick="nextStep()" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                            Próximo →
+                        </button>
+                        
+                        <button id="btnConcluir" onclick="submitScenario()" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition hidden">
+                            <i class="fas fa-check mr-2"></i>Concluir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Cotação do dólar (simulada - em produção viria de uma API)
+        let cotacaoUSD = 5.78; // R$ 5,78 por US$ 1,00
+        
+        // Função para converter BRL para USD
+        function convertBRLtoUSD(valorBRL) {
+            return valorBRL / cotacaoUSD;
+        }
+        
+        // Função para formatar moeda USD
+        function formatUSD(valor) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(valor);
+        }
+        
+        // Atualizar economia anual com conversão USD
+        function updateEconomiaAnual() {
+            const economiaAnualBRL = 340200; // Valor em reais
+            const economiaAnualUSD = convertBRLtoUSD(economiaAnualBRL);
+            
+            const elementoBRL = document.getElementById('economiaAnualBRL');
+            const elementoUSD = document.getElementById('economiaAnualUSD');
+            
+            if (elementoBRL && elementoUSD) {
+                elementoBRL.textContent = `R$ ${economiaAnualBRL.toLocaleString('pt-BR')}`;
+                elementoUSD.textContent = formatUSD(economiaAnualUSD);
+            }
+        }
+        
+        // Gráfico removido - seção de comparação de preços não existe mais
+
+        // Animações e interações
+        document.addEventListener('DOMContentLoaded', function() {
+            // Atualizar economia anual com conversão USD
+            updateEconomiaAnual();
+            
+            // Atualizar cotação a cada 30 segundos (simulação)
+            setInterval(() => {
+                // Simular pequena variação na cotação
+                const variacao = (Math.random() - 0.5) * 0.1; // Variação de ±0.05
+                cotacaoUSD = Math.max(5.5, Math.min(6.0, cotacaoUSD + variacao));
+                updateEconomiaAnual();
+            }, 30000);
+            // Highlight da melhor opção
+            const bestRow = document.querySelector('.best-option');
+            if (bestRow) {
+                bestRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            // Pulse animation nos botões importantes
+            const finalizarBtn = document.querySelector('.pulse-animation');
+            if (finalizarBtn) {
+                setInterval(() => {
+                    finalizarBtn.style.transform = 'scale(1.05)';
+                    setTimeout(() => {
+                        finalizarBtn.style.transform = 'scale(1)';
+                    }, 500);
+                }, 3000);
+            }
+
+            // Tooltip nos status
+            const statusElements = document.querySelectorAll('[data-tooltip]');
+            statusElements.forEach(element => {
+                element.addEventListener('mouseenter', function() {
+                    // Adicionar tooltip implementation
+                });
+            });
+        });
+
+        // Função para confirmar produto
+        function confirmarProduto(fornecedor) {
+            alert(`Produto do ${fornecedor} confirmado! Cenário atualizado.`);
+        }
+
+        // Função para rejeitar produto
+        function rejeitarProduto(fornecedor) {
+            if (confirm(`Tem certeza que deseja rejeitar a proposta do ${fornecedor}?`)) {
+                alert(`Proposta do ${fornecedor} rejeitada.`);
+            }
+        }
+
+        // Função para adicionar novo alvo
+        function adicionarNovoAlvo() {
+            // Abrir modal diretamente na etapa 2 (Problema Alvo)
+            document.getElementById('createScenarioModal').classList.remove('hidden');
+            
+            // Pré-preencher informações do cenário atual (já que é o mesmo cenário)
+            document.getElementById('agricultor').value = 'fazenda-sao-joao'; // Fazenda atual
+            document.getElementById('demanda').value = 'soja-vista-2025'; // Demanda atual
+            document.getElementById('fazenda').value = 'talhao-1'; // Talhão atual
+            document.getElementById('area').value = '1500'; // Área atual
+            
+            // Ir diretamente para a etapa 2 (Problema Alvo)
+            showStep('problem');
+            
+            // Atualizar título do modal para indicar que é um novo alvo
+            const modalTitle = document.querySelector('#createScenarioModal h3');
+            modalTitle.innerHTML = '<i class="fas fa-plus-circle text-green-600 mr-2"></i>Adicionar Novo Alvo ao Cenário';
+            
+            // Atualizar descrição da etapa 2
+            const step2Description = document.querySelector('#step-problem p');
+            step2Description.innerHTML = 'Adicione um novo problema/alvo para análise no <strong>mesmo cenário atual</strong>. As informações do agricultor e propriedade já foram preenchidas automaticamente.';
+            
+            // Atualizar botão de conclusão
+            document.getElementById('btnConcluir').innerHTML = '<i class="fas fa-plus mr-2"></i>Adicionar Alvo';
+        }
+
+        // Função para salvar rascunho
+        function salvarRascunho() {
+            alert('Rascunho salvo com sucesso!\n\nO cenário foi salvo e pode ser continuado posteriormente.');
+        }
+
+        // Função para finalizar cenário
+        function finalizarCenario() {
+            const aprovados = document.querySelectorAll('.status-btn[data-status="aprovado"]').length;
+            const total = document.querySelectorAll('.status-btn').length;
+            
+            if (aprovados === 0) {
+                alert('Atenção!\n\nNenhum fornecedor foi aprovado ainda. É necessário aprovar pelo menos um fornecedor de cada alvo antes de finalizar o cenário.');
+                return;
+            }
+            
+            if (confirm(`Tem certeza que deseja finalizar este cenário?\n\n✓ ${aprovados} de ${total} fornecedores aprovados\n\nEsta ação não pode ser desfeita e as aprovações serão processadas.`)) {
+                alert('🎉 Cenário finalizado com sucesso!\n\n• Fornecedores aprovados foram notificados\n• Relatório final gerado\n• Histórico salvo no sistema\n\nRedirecionando para o histórico de cenários...');
+                // Aqui redirecionaria para a tela de histórico
+            }
+        }
+
+        // Função para download do relatório completo
+        function downloadRelatorioCompleto() {
+            alert('📋 Gerando relatório completo...\n\n• Dados de todos os alvos\n• Comparativo de fornecedores\n• Análise de economia\n• Recomendações técnicas\n\nO download iniciará em instantes!');
+            // Aqui iniciaria o download real do relatório
+        }
+
+        // Função para gerar pedido consolidado
+        function gerarPedidoConsolidado() {
+            const pedidoData = {
+                fornecedores: [
+                    {
+                        nome: 'Fornecedor I',
+                        produto: 'Roundup Original DI',
+                        quantidade: '4.200 L', // 2.8L x 1500ha
+                        precoUnitario: 75.00,
+                        valorTotal: 315000,
+                        alvo: 'Buva + Caruru'
+                    },
+                    {
+                        nome: 'Fornecedor D', 
+                        produto: 'Actara 250 WG',
+                        quantidade: '600 kg', // 200g x 2 aplicações x 1500ha
+                        precoUnitario: 380.00,
+                        valorTotal: 228000,
+                        alvo: 'Percevejo-marrom'
+                    }
+                ],
+                valorTotal: 543000,
+                economiaTotal: 320400,
+                dataEntrega: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')
+            };
+
+            alert(`🛒 Pedido Consolidado Gerado!\n\n` +
+                  `📦 PRODUTOS SELECIONADOS:\n` +
+                  `• ${pedidoData.fornecedores[0].nome}: ${pedidoData.fornecedores[0].quantidade} - R$ ${pedidoData.fornecedores[0].valorTotal.toLocaleString('pt-BR')}\n` +
+                  `• ${pedidoData.fornecedores[1].nome}: ${pedidoData.fornecedores[1].quantidade} - R$ ${pedidoData.fornecedores[1].valorTotal.toLocaleString('pt-BR')}\n\n` +
+                  `💰 VALOR TOTAL: R$ ${pedidoData.valorTotal.toLocaleString('pt-BR')}\n` +
+                  `💚 ECONOMIA: R$ ${pedidoData.economiaTotal.toLocaleString('pt-BR')}\n` +
+                  `📅 ENTREGA PREVISTA: ${pedidoData.dataEntrega}\n\n` +
+                  `Os fornecedores foram notificados e confirmarão em 24h!`);
+        }
+
+        // Função para download do resumo de revendedores
+        function downloadResumoRevendedores() {
+            alert('📊 Gerando Resumo por Revendedores...\n\n' +
+                  '• Detalhamento por fornecedor aprovado\n' +
+                  '• Produtos selecionados e quantidades\n' +
+                  '• Comparativo de economia\n' +
+                  '• Contatos dos fornecedores\n' +
+                  '• Cronograma de entrega\n\n' +
+                  'Download iniciando em instantes!');
+            // Aqui iniciaria o download do resumo específico dos revendedores
+        }
+
+        // Variável para controlar etapa do modal
+        let currentStep = 'info';
+        
+        // Funções do Modal
+        function openCreateScenarioModal() {
+            document.getElementById('createScenarioModal').classList.remove('hidden');
+            showStep('info'); // Sempre iniciar na primeira etapa
+        }
+        
+        function closeCreateScenarioModal() {
+            document.getElementById('createScenarioModal').classList.add('hidden');
+            currentStep = 'info'; // Reset para primeira etapa
+            
+            // Resetar título e descrições do modal
+            const modalTitle = document.querySelector('#createScenarioModal h3');
+            modalTitle.innerHTML = '<i class="fas fa-bullseye text-green-600"></i> Simular Novo Cenário';
+            
+            const step2Description = document.querySelector('#step-problem p');
+            step2Description.innerHTML = 'Selecione o problema para a cultura <span id="selectedCulture" class="font-medium text-green-600"></span> selecionada na demanda anterior.';
+            
+            // Resetar botão de conclusão
+            document.getElementById('btnConcluir').innerHTML = '<i class="fas fa-check mr-2"></i>Concluir';
+            
+            // Limpar formulário
+            document.getElementById('createScenarioForm').reset();
+            document.getElementById('problemaAlvo').value = '';
+            document.getElementById('descricaoProblema').value = '';
+            document.querySelector('input[name="nivelInfestacao"][value="media"]').checked = true;
+        }
+        
+        // Função para mostrar etapas
+        function showStep(step) {
+            currentStep = step;
+            
+            // Esconder todas as etapas
+            document.querySelectorAll('.step-content').forEach(el => el.classList.add('hidden'));
+            
+            // Mostrar etapa atual
+            document.getElementById('step-' + step).classList.remove('hidden');
+            
+            // Atualizar abas
+            const tabInfo = document.getElementById('tab-info');
+            const tabProblem = document.getElementById('tab-problem');
+            
+            if (step === 'info') {
+                tabInfo.className = 'flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-l-lg flex items-center justify-center space-x-2';
+                tabProblem.className = 'flex-1 px-4 py-2 text-sm font-medium text-gray-500 bg-gray-100 rounded-r-lg flex items-center justify-center space-x-2';
+                
+                // Esconder botão anterior, mostrar próximo
+                document.getElementById('btnAnterior').classList.add('hidden');
+                document.getElementById('btnProximo').classList.remove('hidden');
+                document.getElementById('btnConcluir').classList.add('hidden');
+            } else {
+                tabInfo.className = 'flex-1 px-4 py-2 text-sm font-medium text-gray-500 bg-gray-100 rounded-l-lg flex items-center justify-center space-x-2';
+                tabProblem.className = 'flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-r-lg flex items-center justify-center space-x-2';
+                
+                // Mostrar botão anterior, esconder próximo, mostrar concluir
+                document.getElementById('btnAnterior').classList.remove('hidden');
+                document.getElementById('btnProximo').classList.add('hidden');
+                document.getElementById('btnConcluir').classList.remove('hidden');
+                
+                // Atualizar cultura selecionada
+                updateSelectedCulture();
+            }
+        }
+        
+        // Função para ir para próxima etapa
+        function nextStep() {
+            if (currentStep === 'info') {
+                // Validar campos obrigatórios da primeira etapa
+                const agricultor = document.getElementById('agricultor').value;
+                if (!agricultor) {
+                    alert('Por favor, selecione um agricultor antes de continuar.');
+                    return;
+                }
+                
+                showStep('problem');
+            }
+        }
+        
+        // Função para voltar etapa
+        function previousStep() {
+            if (currentStep === 'problem') {
+                showStep('info');
+            }
+        }
+        
+        // Atualizar cultura selecionada
+        function updateSelectedCulture() {
+            const demandaEl = document.getElementById('demanda');
+            const selectedCultureEl = document.getElementById('selectedCulture');
+            
+            // Verificar se os elementos existem antes de tentar acessá-los
+            if (!demandaEl || !selectedCultureEl) {
+                return;
+            }
+            
+            const demanda = demandaEl.value;
+            
+            if (demanda.includes('soja')) {
+                selectedCultureEl.textContent = 'Soja';
+            } else if (demanda.includes('milho')) {
+                selectedCultureEl.textContent = 'Milho';
+            } else if (demanda.includes('algodao')) {
+                selectedCultureEl.textContent = 'Algodão';
+            } else if (demanda.includes('trigo')) {
+                selectedCultureEl.textContent = 'Trigo';
+            } else {
+                selectedCultureEl.textContent = '';
+            }
+        }
+        
+        // Função para finalizar criação do cenário
+        function submitScenario() {
+            // Validar campos obrigatórios da segunda etapa
+            const problemaAlvo = document.getElementById('problemaAlvo').value;
+            const nivelInfestacao = document.querySelector('input[name="nivelInfestacao"]:checked').value;
+            
+            if (!problemaAlvo) {
+                alert('Por favor, selecione um problema alvo antes de concluir.');
+                return;
+            }
+            
+            // Verificar se é um novo alvo ou cenário completo
+            const modalTitle = document.querySelector('#createScenarioModal h3').textContent;
+            const isNovoAlvo = modalTitle.includes('Adicionar Novo Alvo');
+            
+            // Coletar todos os dados
+            const scenarioData = {
+                agricultor: document.getElementById('agricultor').value,
+                demanda: document.getElementById('demanda').value,
+                fazenda: document.getElementById('fazenda').value,
+                area: document.getElementById('area').value,
+                dataAplicacao: document.getElementById('dataAplicacao').value,
+                observacoes: document.getElementById('observacoes').value,
+                problemaAlvo: problemaAlvo,
+                nivelInfestacao: nivelInfestacao,
+                descricaoProblema: document.getElementById('descricaoProblema').value
+            };
+            
+            console.log('Dados do cenário:', scenarioData);
+            
+            if (isNovoAlvo) {
+                // É um novo alvo sendo adicionado ao cenário atual
+                alert('🎯 Novo alvo adicionado com sucesso!\n\n• Problema: ' + problemaAlvo + '\n• Nível: ' + nivelInfestacao + '\n• Fornecedores sendo consultados...\n\nO cenário será atualizado em instantes!');
+                
+                // Simular adição de novo alvo ao cenário atual
+                // Aqui você faria a requisição para adicionar o novo alvo
+                // e recarregaria a página para mostrar o novo alvo
+                setTimeout(() => {
+                    location.reload(); // Simula recarregamento para mostrar novo alvo
+                }, 1000);
+            } else {
+                // É um cenário completo sendo criado
+                alert('Cenário criado com sucesso! Redirecionando para o dashboard...');
+                
+                // Aqui você redirecionaria para a segunda tela (dashboard)
+                // window.location.href = 'dashboard-cenario.html';
+            }
+            
+            // Fechar modal
+            closeCreateScenarioModal();
+        }
+        
+        // Auto-preenchimento de área baseado na fazenda
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('fazenda').addEventListener('change', function() {
+                const area = document.getElementById('area');
+                const fazendaValues = {
+                    'talhao-1': '1500',
+                    'talhao-2': '2200', 
+                    'talhao-3': '800',
+                    'talhao-4': '3200'
+                };
+                
+                if (fazendaValues[this.value]) {
+                    area.value = fazendaValues[this.value];
+                }
+            });
+            
+            // Fechar modal ao clicar fora
+            document.getElementById('createScenarioModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeCreateScenarioModal();
+                }
+            });
+            
+            // Fechar modal com ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeCreateScenarioModal();
+                }
+            });
+        });
+
+        // Função para expandir/recolher alvos
+        function toggleAlvo(alvoId) {
+            const alvo = document.getElementById(alvoId);
+            const icon = document.getElementById(`icon-${alvoId}`);
+            const text = document.getElementById(`text-${alvoId}`);
+            
+            if (alvo.classList.contains('alvo-collapsed')) {
+                // Expandir
+                alvo.classList.remove('alvo-collapsed');
+                alvo.classList.add('alvo-expanded');
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+                text.textContent = 'Recolher';
+            } else {
+                // Recolher
+                alvo.classList.remove('alvo-expanded');
+                alvo.classList.add('alvo-collapsed');
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+                text.textContent = 'Expandir';
+            }
+        }
+
+        // Função para alternar status dos fornecedores
+        function toggleStatus(button) {
+            const currentStatus = button.getAttribute('data-status');
+            let newStatus, newClass, newIcon, newText;
+            
+            switch(currentStatus) {
+                case 'aguardando':
+                    newStatus = 'aprovado';
+                    newClass = 'bg-green-600 hover:bg-green-700';
+                    newIcon = 'fas fa-check mr-1';
+                    newText = 'Aprovado';
+                    break;
+                case 'aprovado':
+                    newStatus = 'rejeitado';
+                    newClass = 'bg-red-600 hover:bg-red-700';
+                    newIcon = 'fas fa-times mr-1';
+                    newText = 'Rejeitado';
+                    break;
+                case 'rejeitado':
+                    newStatus = 'aguardando';
+                    newClass = 'bg-yellow-500 hover:bg-yellow-600';
+                    newIcon = 'fas fa-clock mr-1';
+                    newText = 'Aguardando';
+                    break;
+                default:
+                    newStatus = 'aguardando';
+                    newClass = 'bg-yellow-500 hover:bg-yellow-600';
+                    newIcon = 'fas fa-clock mr-1';
+                    newText = 'Aguardando';
+            }
+            
+            // Atualizar o botão
+            button.setAttribute('data-status', newStatus);
+            button.className = `status-btn ${newClass} text-white px-3 py-1 rounded text-xs transition font-medium`;
+            button.innerHTML = `<i class="${newIcon}"></i>${newText}`;
+            
+            // Feedback visual com animação
+            button.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                button.style.transform = 'scale(1)';
+            }, 150);
+        }
+
+        // Função para atualizar custos quando dosagem ou aplicações são alteradas
+        function updateCosts(input) {
+            const row = input.closest('tr');
+            if (!row) return;
+            
+            // Buscar campos na linha
+            const dosageInput = row.querySelector('input[type="number"][step="0.1"], input[type="number"][step="10"]');
+            const applicationInput = row.querySelector('input[type="number"]:not([step])');
+            const priceCell = row.cells[4]; // Coluna Preço/L
+            const costCell = row.cells[5];  // Coluna Custo/HA
+            const totalCell = row.cells[6]; // Coluna Total
+            const economyCell = row.cells[7]; // Coluna Economia
+            
+            if (!dosageInput || !applicationInput || !priceCell || !costCell) return;
+            
+            // Obter valores
+            const dosage = parseFloat(dosageInput.value) || 0;
+            const applications = parseInt(applicationInput.value) || 1;
+            const priceText = priceCell.querySelector('div').textContent;
+            const priceMatch = priceText.match(/R\$\s*([\d,]+\.?\d*)/);
+            
+            if (!priceMatch) return;
+            
+            const unitPrice = parseFloat(priceMatch[1].replace(',', '')) || 0;
+            const area = 1500; // Área padrão em hectares
+            
+            // Calcular novos valores
+            let costPerHA, totalCost;
+            
+            // Verificar se é produto em gramas (WG)
+            if (dosageInput.getAttribute('step') === '10') {
+                // Produto em gramas - converter para kg e calcular
+                const dosageKg = dosage / 1000; // Converter g para kg
+                costPerHA = dosageKg * unitPrice * applications;
+            } else {
+                // Produto líquido
+                costPerHA = dosage * unitPrice * applications;
+            }
+            
+            totalCost = costPerHA * area;
+            
+            // Atualizar células
+            const costDiv = costCell.querySelector('div');
+            if (costDiv) {
+                costDiv.textContent = `R$ ${costPerHA.toFixed(2).replace('.', ',')}`;
+                
+                // Atualizar cores baseado no valor
+                costDiv.className = costPerHA > 250 ? 'font-bold text-red-600' : 
+                                   costPerHA > 200 ? 'font-bold text-yellow-600' : 
+                                   'font-bold text-green-600';
+            }
+            
+            const totalDiv = totalCell.querySelector('div');
+            if (totalDiv) {
+                totalDiv.textContent = `R$ ${totalCost.toLocaleString('pt-BR', {minimumFractionDigits: 0})}`;
+            }
+            
+            // Calcular economia em relação ao valor base de referência (será implementado conforme necessário)
+            updateEconomy(row, costPerHA, totalCost);
+            
+            // Feedback visual
+            input.style.backgroundColor = '#f0f9ff';
+            setTimeout(() => {
+                input.style.backgroundColor = '';
+            }, 300);
+        }
+        
+        // Função para atualizar economia
+        function updateEconomy(row, costPerHA, totalCost) {
+            const economyCell = row.cells[7];
+            if (!economyCell) return;
+            
+            // Valor de referência para cálculo de economia (produto mais caro como base)
+            const referenceCostPerHA = 290; // Valor base para comparação
+            const referenceTotal = referenceCostPerHA * 1500;
+            
+            const economyValue = referenceTotal - totalCost;
+            const economyDiv = economyCell.querySelector('div');
+            
+            if (economyDiv) {
+                const prefix = economyValue >= 0 ? '+' : '';
+                economyDiv.textContent = `${prefix}R$ ${Math.abs(economyValue).toLocaleString('pt-BR', {minimumFractionDigits: 0})}`;
+                
+                // Atualizar cores
+                economyDiv.className = economyValue >= 0 ? 'font-bold text-green-600' : 'font-bold text-red-600';
+            }
+        }
+    </script>
+</body>
+</html>
