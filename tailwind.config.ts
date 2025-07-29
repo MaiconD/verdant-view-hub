@@ -61,7 +61,30 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				agro: {
+					green: 'hsl(var(--agro-green))',
+					'green-light': 'hsl(var(--agro-green-light))',
+					'green-dark': 'hsl(var(--agro-green-dark))',
+					blue: 'hsl(var(--agro-blue))',
+					'blue-light': 'hsl(var(--agro-blue-light))',
+					orange: 'hsl(var(--agro-orange))',
+					red: 'hsl(var(--agro-red))',
+					yellow: 'hsl(var(--agro-yellow))',
 				}
+			},
+			backgroundImage: {
+				'gradient-green': 'var(--gradient-green)',
+				'gradient-primary': 'var(--gradient-primary)',
+				'gradient-blue': 'var(--gradient-blue)',
+			},
+			boxShadow: {
+				'card': 'var(--shadow-card)',
+				'hover': 'var(--shadow-hover)',
+			},
+			fontFamily: {
+				'inter': ['Inter', 'sans-serif'],
+				'poppins': ['Poppins', 'sans-serif'],
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
